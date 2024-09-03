@@ -11,25 +11,32 @@ import CustomSpinner from "@/components/functional/CustomSpinner";
 const AclGuard = ({ children, acl }) => {
   const auth = useAuth();
   const router = useRouter();
-  const [hasRole, setHasRole] = useState(auth.role)
+  const [hasRole, setHasRole] = useState(auth.role);
+  const [loading, setLoading] = useState(true);
 
   const rules = defineAbility(auth.role);
   const ability = new Ability();
   ability.update(rules);
+
   useEffect(() => {
+    if (auth.user && (auth.role == undefined || auth.role == null)) {
+      return;
+    }
     if (!auth.role && router.route.indexOf("profile") !== -1) {
       router.push("/login");
     } else if (acl.subject === pages.login && auth.role !== null) {
       router.push("/");
-    } else if (auth.role !== null && !ability.can(acl.action, acl.subject)) {
-      router.push("/401");
+    } else if (!ability.can(acl.action, acl.subject)) {
+      router.push("/giris-yap");
     }
   }, [auth.role, router]);
 
   return (
-    <AbilityContext.Provider value={ability}>
-      {children}
-    </AbilityContext.Provider>
+    <>
+      <AbilityContext.Provider value={ability}>
+        {children}
+      </AbilityContext.Provider>
+    </>
   );
 };
 

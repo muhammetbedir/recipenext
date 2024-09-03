@@ -1,5 +1,8 @@
-import { GetCookie, RemoveCookie } from "src/helpers/cookieHelper";
-import { createContext, useContext, useState } from "react";
+import { GetCookie, RemoveCookie, SetCookie } from "src/helpers/cookieHelper";
+import { createContext, useContext, useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import moment from "moment";
+import { getUserRoleByUserId } from "@/services/userService";
 
 const defaultProvider = {
   user: null,
@@ -11,22 +14,41 @@ const defaultProvider = {
 const AuthContext = createContext(defaultProvider);
 const AuthProvider = ({ children }) => {
   // ** States
-  const [role, setRole] = useState(GetCookie("role") ?? null);
-  const [user, setUser] = useState(defaultProvider.user);
+  const [role, setRole] = useState(null);
+  const [user, setUser] = useState(GetCookie(process.env.NEXT_PUBLIC_AUTH));
+  const router = useRouter();
+
+  // ** React Query
 
   // ** Hooks
   const logout = () => {
-    RemoveCookie("role");
+    RemoveCookie(process.env.NEXT_PUBLIC_AUTH);
     setRole(null);
     setUser(null);
+    router.push("/");
   };
+  const login = ({ user, role }) => {
+    var cookieOptions = {
+      secure: false,
+      sameSite: "strict",
+      expires: moment(user?.expiration).toDate(),
+    };
+    SetCookie(process.env.NEXT_PUBLIC_AUTH, user, cookieOptions);
+    setRole(role);
+    setUser(user);
+  };
+  useEffect(() => {
+    if (user?.id != null)
+      getUserRoleByUserId(user?.id).then((res) => setRole(res.data));
+  }, [user]);
+
   const values = {
-    // user: GetCookie(process.env.NEXT_PUBLIC_AUTH),
     user,
     role,
     setRole,
     setUser,
     logout,
+    login,
   };
   return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>;
 };

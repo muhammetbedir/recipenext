@@ -1,9 +1,12 @@
+import { GetCookie } from "@/helpers/cookieHelper";
 import axios from "axios";
 
-const BaseService = () => {
-  var user = { token: "sda" }; // TODO cookie den user okunacak
-  var token = user ? `Bearer ${JSON.parse(user).token}` : null;
-
+const BaseService = (context) => {
+  var user =
+    context != null
+      ? GetCookie(process.env.NEXT_PUBLIC_AUTH, context)
+      : GetCookie(process.env.NEXT_PUBLIC_AUTH);
+  var token = user ? `Bearer ${user?.token}` : null;
   let axiosService = axios.create({
     baseURL: process.env.NEXT_PUBLIC_BASEURL,
     responseType: "json",
@@ -38,11 +41,18 @@ const BaseService = () => {
       .then((response) => response.data);
   };
 
+  let del = (path) => {
+    return axiosService.request({
+      method: "DELETE",
+      url: path,
+    });
+  };
+
   return {
-    upload,
     get,
     post,
     put,
+    del,
   };
 };
 

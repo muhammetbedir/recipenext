@@ -1,26 +1,26 @@
-import React from 'react'
-import Slider from 'react-slick/lib/slider'
-import SliderCustom from '../functional/SliderCustom'
-import RecipeCard from '../functional/RecipeCard'
+import { Box, Typography } from "@mui/material";
+import RecipeCard from "../functional/RecipeCard";
+import SliderCustom from "../functional/SliderCustom";
 
-const WeeklyHighlights = ({ photo }) => {
+const WeeklyHighlights = ({ data, refetch }) => {
+  return (
+    <Box>
+      <Typography
+        className="text-secondary"
+        variant="h6"
+        fontWeight={"bold"}
+        my={2}
+        ml={2}
+      >
+        Haftalık Trend Tarifler
+      </Typography>
+      <SliderCustom>
+        {data?.map((item, index) => {
+          return <RecipeCard refetch={refetch} key={item?.id} {...item} />;
+        })}
+      </SliderCustom>
+    </Box>
+  );
+};
 
-    var data = {
-        title: "Çiğ Köfte", image: photo, categories: ["ev yemeği", "acı"]
-    }
-    return (
-        <SliderCustom>
-            <RecipeCard {...data} />
-            <RecipeCard {...data} />
-            <RecipeCard {...data} />
-            <RecipeCard {...data} />
-            <RecipeCard {...data} />
-            <RecipeCard {...data} />
-            <RecipeCard {...data} />
-            <RecipeCard {...data} />
-        </SliderCustom>
-    )
-}
-
-
-export default WeeklyHighlights
+export default WeeklyHighlights;

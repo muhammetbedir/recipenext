@@ -1,8 +1,10 @@
-import BaseService from "src/services/BaseService";
+import { Toast } from "@/helpers/responseHandler";
+import BaseService from "./baseService";
+import { RemoveCookie } from "@/helpers/cookieHelper";
 
 export const createPromise = async (requestParameters) => {
   let promise = new Promise(() => {});
-  let service = BaseService();
+  let service = BaseService(requestParameters?.context);
   switch (requestParameters?.type) {
     case "POST":
       promise = await service.post(
@@ -15,6 +17,9 @@ export const createPromise = async (requestParameters) => {
       break;
     case "PUT":
       promise = service.put(requestParameters?.url, requestParameters?.payload);
+      break;
+    case "DELETE":
+      promise = service.del(requestParameters?.url);
       break;
     default:
       break;
@@ -80,6 +85,23 @@ export const makePutRequest = async (
   return await makeRequest(requestParameters);
 };
 
+export const makeDeleteRequest = async (
+  url,
+  context = null,
+  showNotifications = true
+) => {
+  const requestParameters = {
+    type: "DELETE",
+
+    url,
+
+    showNotifications,
+
+    context,
+  };
+  return await makeRequest(requestParameters);
+};
+
 const makeRequest = async (requestParameters) => {
   return createPromise(requestParameters)
     .then((response) => {
@@ -87,7 +109,7 @@ const makeRequest = async (requestParameters) => {
     })
 
     .catch((error) => {
-      return handleError(error);
+      return handleError(error, requestParameters.showNotifications);
     });
 };
 
@@ -95,7 +117,13 @@ const handleSuccess = async (response) => {
   return Promise.resolve(response);
 };
 
-const handleError = async (error) => {
+const handleError = async (error, showNotifications) => {
   //handle error codes
+  if (error?.response?.data?.StatusCode === 401) {
+    RemoveCookie(process.env.NEXT_PUBLIC_AUTH);
+    window.location.reload();
+    return Promise.reject({ error });
+  }
+  showNotifications && Toast.errorToast(error.response?.data?.Message);
   return Promise.reject({ error });
 };
